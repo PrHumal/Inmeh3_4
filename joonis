@@ -1,0 +1,89 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Defineerime sõlmede koordinaadid (näiteks x, y tasapinnal)
+nodes = np.array([
+    [0, 2],   # sõlm 0 (fikseeritud kahes teljes)
+    [1, 2],   # sõlm 1
+    [2, 2],   # sõlm 2
+    [3, 2],   # sõlm 3 (fikseeritud ühes teljes)
+    [2, 1],   # sõlm 4
+    [1, 1],   # sõlm 5
+    [1, 0]    # sõlm 6 (fikseeritud ühes teljes)
+])
+
+# Defineerime varraste ühendused sõlmede vahel
+bars = np.array([
+    [0, 1], [1, 2], [2, 3],  # Ülemine horisontaalne rida
+    [0, 5], [1, 5], [2, 5], [4, 5], [2, 4], [3, 4],  # Diagonaalsed ja vertikaalsed ühendused
+    [4, 6], [5, 6]            # Alumine osa
+])
+
+# Defineerime fikseeritud sõlmed
+fixed_nodes_x_y = [0]  # Kahes teljes fikseeritud sõlmed
+fixed_nodes_x = [6]    # Ühes teljes fikseeritud sõlm
+
+# Defineerime jõuvektorid skaalaga 10 kN ühe diagrammi ruudu kohta
+forces = {
+    1: (6 * np.cos(np.radians(60)), 6 * np.sin(np.radians(60))),  # P1: 6 kN, 60 kraadi sõlmes 1
+    2: (4 * np.cos(np.radians(60)), 4 * np.sin(np.radians(60))),  # P2: 4 kN, 60 kraadi sõlmes 2
+    3: (-2 * np.cos(np.radians(135)), -2 * np.sin(np.radians(135))),  # P3: 2 kN, pööratud 135 kraadi sõlmes 3
+    4: (-3.6 * np.cos(np.radians(135)), -3.6 * np.sin(np.radians(135))),  # P4: 3.6 kN, pööratud 135 kraadi sõlmes 5
+    5: (-1, 0)  # P5: horisontaalne, 1 kN sõlmes 4
+}
+
+# Joonistame sõlmed ja ühendused
+for i, node in enumerate(nodes):
+    if i in fixed_nodes_x_y:
+        plt.plot(node[0], node[1], 'r^', markersize=10, label="Kahes teljes fikseeritud" if i == 0 else "")  # Kahes teljes fikseeritud sõlm punase kolmnurgana
+    elif i in fixed_nodes_x:
+        plt.plot(node[0], node[1], 'b^', markersize=10, label="Ühes teljes fikseeritud" if i == 6 else "")  # Ühes teljes fikseeritud sõlm sinise kolmnurgana
+    else:
+        plt.plot(node[0], node[1], 'go', label="Vaba sõlm" if i == 1 else "")  # Vaba sõlm rohelise ringina
+    
+    # Lisa sõlme number
+    plt.text(node[0] + 0.15, node[1] - 0.15, f'{i}', fontsize=12, ha='center', va='center')
+
+# Joonistame varraste ühendused
+for bar in bars:
+    p1, p2 = nodes[bar[0]], nodes[bar[1]]
+    plt.plot([p1[0], p2[0]], [p1[1], p2[1]], 'k-', label="Varras" if bar[0] == 0 and bar[1] == 1 else "")
+
+# Joonistame varraste ühendused ja lisame varraste numbrid
+for idx, bar in enumerate(bars):
+    p1, p2 = nodes[bar[0]], nodes[bar[1]]
+    plt.plot([p1[0], p2[0]], [p1[1], p2[1]], 'k-', label="Varras" if idx == 0 else "")
+    
+    # Arvutame varda keskpunkti
+    mid_x = (p1[0] + p2[0]) / 2
+    mid_y = (p1[1] + p2[1]) / 2
+    
+    # Lisa varda number keskpunkti juurde
+    plt.text(mid_x, mid_y+ 0.1, f'{idx}', fontsize=10, color='blue', ha='center', va='center')
+
+
+
+# Joonistame ja tähistame jõuvektorid skaalas
+for node_index, force in forces.items():
+    node = nodes[node_index]
+    if node_index == 1:
+        plt.quiver(node[0], node[1], -force[0], -force[1], angles='xy', scale_units='xy', scale=3, color='purple', width=0.005, label="P1" if node_index == 1 else "", pivot='tip')
+    else:
+        plt.quiver(node[0], node[1], force[0], force[1], angles='xy', scale_units='xy', scale=3, color='purple', width=0.005, label=f"P{node_index}" if node_index == 1 else "")
+    
+    # Tähista jõuvektori väärtus
+    text_x = node[0] + force[0] * 0.1  # Teksti x-koordinaat veidi vektori lõpu taga
+    text_y = node[1] + force[1] * 0.1  # Teksti y-koordinaat veidi vektori lõpu taga
+    plt.text(text_x, text_y, f'P{node_index} ({round(force[0], 1)}, {round(force[1], 1)}) kN', fontsize=10, color='purple')
+
+# Määrame telgede ulatuse
+plt.xlim(-1, 5)  # X-telg vahemikus -1 kuni 5
+plt.ylim(-1, 4)  # Y-telg vahemikus -1 kuni 3
+
+# Lisame joonise pealdised
+plt.xlabel('X-telg')
+plt.ylabel('Y-telg')
+plt.title('Seitsmest sõlmest koosnev sõrestik koos fikseerimispunktide ja tähistatud jõuvektoritega')
+plt.grid()
+plt.legend(loc='lower right')
+plt.show()
